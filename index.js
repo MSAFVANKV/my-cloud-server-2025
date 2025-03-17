@@ -1,9 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import userRoute from './routers/userRoute.js';
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
+import dns from 'dns';
+
+import userRoute from './routers/userRoute.js';
+import uploadRoute from './routers/uploadRoute.js';
 
 
 // import { Server } from 'socket.io';
@@ -28,9 +31,22 @@ app.use(express.json());
 app.use("/uploads/images", express.static("uploads/images/"))
 app.use("/uploads/recordings", express.static("uploads/recordings/"))
 
+const checkInternet = (req, res, next) => {
+  dns.lookup('google.com', (err) => {
+    if (err && err.code === "ENOTFOUND") {
+      return res.status(503).json({ message: "No internet connection. Please check your network and try again." });
+    }
+    next();
+  });
+};
+
+app.use(checkInternet);
+
 
 // app.use('/api/messages', messageRoute);
 app.use('/api/user', userRoute);
+app.use('/api/upload', uploadRoute);
+
 
 
 const server = app.listen(PORT,()=>{

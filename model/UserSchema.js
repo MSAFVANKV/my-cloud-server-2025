@@ -26,6 +26,8 @@ const UserSchema = new mongoose.Schema({
   required: true, // Added to store user's database name
   unique: true,   // Ensures each database name is unique
 },
+totalStorage: { type: Number, default: 10 * 1024 * 1024 * 1024 }, // 10GB in bytes
+usedStorage: { type: Number, default: 0 },
   avatar: {
     type: String,
     default: "https://via.placeholder.com/150x150",
@@ -33,6 +35,10 @@ const UserSchema = new mongoose.Schema({
   unread_Count: {
     type: Number,
     default: 0,
+  },
+  isDeleted:{
+    type: Boolean,
+    default: false,
   },
   last_Message_Time: {
     type: Date,

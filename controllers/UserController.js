@@ -4,6 +4,70 @@ import bcrypt from "bcrypt";
 import { generateToken } from "../util/auth.js";
 
 // Register Controller
+// export const registerUser = async (req, res) => {
+//   try {
+//     const { email, password, userName } = req.body;
+
+//     // Validate required fields
+//     if (!email || !password || !userName) {
+//       return res.status(400).json({ message: "All fields are required" });
+//     }
+
+//     const dbName = email.split("@")[0];
+
+//     // Check if user already exists
+
+//     const UserDb = await UserModal();
+
+//     const existingUser = await UserDb.findOne({ email });
+//     if (existingUser) {
+//       return res.status(400).json({ message: "User already exists" });
+//     }
+
+//     // const dbList = await mongoose.connection.db.admin().listDatabases();
+//     // const dbExists = dbList.databases.some((db) => db.name === dbName);
+
+//     // if (dbExists) {
+//     //   return res
+//     //     .status(400)
+//     //     .json({
+//     //       message: "Database name already taken. Use a different email.",
+//     //     });
+//     // }
+
+//     // Hash password
+//     const saltRounds = 10;
+//     const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+//     // Create new user in main database with database name
+//     const newUser = new UserDb({
+//       email,
+//       password: hashedPassword,
+//       userName,
+//       databaseName: dbName, // Save the user's database name
+//     });
+
+//     await newUser.save();
+
+//     // Create a separate database for the user
+//     // const userDB = mongoose.connection.useDb(dbName);
+//     // await userDB.createCollection("user_data");
+
+//     // Create a separate database for the user
+//     // const dbName = `user_${newUser._id}`;
+//     // const userDB = mongoose.connection.useDb(dbName);
+
+//     // Example: Create a collection in the user's database
+//     // await userDB.createCollection('user_data');
+
+//     res
+//       .status(201)
+//       .json({ message: "User registered successfully", user: newUser });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 export const registerUser = async (req, res) => {
   try {
     const { email, password, userName } = req.body;
@@ -13,61 +77,45 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const dbName = email.split("@")[0];
-
-    // Check if user already exists
-
     const UserDb = await UserModal();
 
+    // Check if user already exists
     const existingUser = await UserDb.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // const dbList = await mongoose.connection.db.admin().listDatabases();
-    // const dbExists = dbList.databases.some((db) => db.name === dbName);
-
-    // if (dbExists) {
-    //   return res
-    //     .status(400)
-    //     .json({
-    //       message: "Database name already taken. Use a different email.",
-    //     });
-    // }
-
     // Hash password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create new user in main database with database name
-    const newUser = new UserDb({
+    // TEMPORARILY create a new user without saving
+    const tempUser = new UserDb({
       email,
       password: hashedPassword,
       userName,
-      databaseName: dbName, // Save the user's database name
+      totalStorage: 10 * 1024 * 1024 * 1024, // 10GB
+      usedStorage: 0, // No storage used initially
     });
 
-    await newUser.save();
+    // Generate database name with email prefix + temporary user _id
+    const dbName = `${email.split("@")[0]}-${tempUser._id}`;
 
-    // Create a separate database for the user
-    // const userDB = mongoose.connection.useDb(dbName);
-    // await userDB.createCollection("user_data");
+    // FINAL: Create user with the generated database name
+    tempUser.databaseName = dbName;
+    const newUser = await tempUser.save();
 
-    // Create a separate database for the user
-    // const dbName = `user_${newUser._id}`;
-    // const userDB = mongoose.connection.useDb(dbName);
+    res.status(201).json({
+      message: "User registered successfully",
+      user: newUser,
+    });
 
-    // Example: Create a collection in the user's database
-    // await userDB.createCollection('user_data');
-
-    res
-      .status(201)
-      .json({ message: "User registered successfully", user: newUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // 2. login Controller  ===
 export const loginUser = async (req, res) => {
@@ -97,7 +145,7 @@ export const loginUser = async (req, res) => {
       dbName: user.databaseName, // Include database name
     });
 
-    console.log("Setting cookie...");
+    // console.log("Setting cookie...");
     res.cookie(process.env.TOKEN_NAME, token, {
       secure: process.env.NODE_ENV === "production",
       domain:
