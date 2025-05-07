@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import { getDb } from "../connection/getDbConnection.js";
+import slugify from 'slugify'
 
 const FolderSchema = new mongoose.Schema(
   {
-    folderName: {
+    name: {
       type: String,
       default: "untitled-folder",
     },
@@ -14,16 +15,28 @@ const FolderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    parentFolder: {
+    published:{
+      type: Boolean,
+      default: true,
+    },
+    parentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Folder",
       default: null,
     },
-    files: {
+    subFolders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Folder",
+        default: [],
+      },
+    ],
+    
+    files: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Media",
-      default: null,
-    },
+      default: [],
+    }],
 
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -41,8 +54,8 @@ const FolderSchema = new mongoose.Schema(
 );
 
 FolderSchema.pre("validate", function (next) {
-  if (this.isModified("folderName")) {
-    this.slug = slugify(this.folderName, { lower: true, strict: true });
+  if (this.isModified("name")) {
+    this.slug = slugify(this.name, { lower: true, strict: true });
   }
   next();
 });

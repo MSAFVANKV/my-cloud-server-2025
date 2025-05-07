@@ -6,6 +6,7 @@ import {
 import { authenticateUser } from "../middleware/authMidd.js";
 import { mediaUpload } from "../config/multer.js";
 import { checkStorageLimit } from "../config/storage.js";
+import { createFolder, getFoldersWithSubFolders } from "../controllers/folder-controller/controller.js";
 
 const router = Router();
 
@@ -18,5 +19,23 @@ router.post(
 );
 
 router.get("/file", authenticateUser, getUploadedFiles);
+
+// folder creations
+
+router.post(
+  "/folder",
+  authenticateUser,
+  checkStorageLimit,
+  createFolder
+);
+
+
+router.get(
+  "/folder",
+  authenticateUser,
+  checkStorageLimit,
+  getFoldersWithSubFolders
+);
+
 
 export default router;

@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { MediaModal } from "../model/mediaModal.js";
 import mongoose from "mongoose";
 import { UserModal } from "../model/UserSchema.js";
+import { FolderModal } from "../model/folderModal.js";
 
 export const getImageDimensions = async (filePath, mimetype) => {
   if (!mimetype.startsWith("image/")) return null;
@@ -28,23 +29,21 @@ export const getImageDimensions = async (filePath, mimetype) => {
   }
 };
 
+// 2. upload files
 export const uploadFiles = async (req, res, next) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: "No files uploaded" });
     }
+
     const { folderId } = req.body;
-
-    console.log(folderId, "folderId");
-
     const MediaSchema = await MediaModal(req.dbName);
+    const FolderSchema = await FolderModal(req.dbName); // <-- Get Folder schema
 
     if (folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
-      return res
-        .status(400)
-        .json({
-          message: "Invalid folderId. It must be a valid Mongoose ObjectId.",
-        });
+      return res.status(400).json({
+        message: "Invalid folderId. It must be a valid Mongoose ObjectId.",
+      });
     }
 
     const savedFiles = await Promise.all(
@@ -64,8 +63,19 @@ export const uploadFiles = async (req, res, next) => {
       })
     );
 
-    await MediaSchema.insertMany(savedFiles);
-    // Update used storage
+    // Save files
+    const insertedFiles = await MediaSchema.insertMany(savedFiles);
+
+    // If folderId is provided, push file IDs to folder's files array
+    if (folderId) {
+      const fileIds = insertedFiles.map(file => file._id);
+      await FolderSchema.findByIdAndUpdate(
+        folderId,
+        { $push: { files: { $each: fileIds } } }
+      );
+    }
+
+    // Update user's used storage
     const UserDb = await UserModal();
     await UserDb.findByIdAndUpdate(req.user._id, {
       usedStorage: req.newUsedStorage,
@@ -73,15 +83,14 @@ export const uploadFiles = async (req, res, next) => {
 
     res.status(200).json({
       message: "Files uploaded successfully!",
-      files: savedFiles,
+      files: insertedFiles,
     });
   } catch (error) {
     console.error("File upload error:", error);
-    res
-      .status(500)
-      .json({ message: "File upload failed", error: error.message });
+    res.status(500).json({ message: "File upload failed", error: error.message });
   }
 };
+
 
 // export const getUploadedFiles = async (req, res) => {
 //   try {
@@ -96,25 +105,34 @@ export const uploadFiles = async (req, res, next) => {
 //   }
 // };
 export const getUploadedFiles = async (req, res) => {
-    try {
-      let filter = { isDeleted: false, uploadedBy: req.user._id };
-  
-      if (req.query.filters) {
-        const filters = JSON.parse(req.query.filters); // Parse the filters from the query
-        filters.forEach(({ key, value }) => {
-          filter[key] = value;
-        });
+  try {
+    const MediaSchema = await MediaModal(req.dbName);
+
+    const queryFilters = { isDeleted: false, ...req.query };
+
+    // Validate any ObjectId fields
+    for (const key in queryFilters) {
+      if (key.endsWith("Id") && !mongoose.Types.ObjectId.isValid(queryFilters[key])) {
+        return res.status(400).json({ success: false, message: `Invalid ObjectId for ${key}` });
       }
-  
-      const MediaSchema = await MediaModal(req.dbName)
-      const files = await MediaSchema.find(filter).sort({_id:-1})
-  
-      return res.status(200).json({ files });
-    } catch (error) {
-      console.error("Error fetching files:", error);
-      res.status(500).json({ message: "Internal server error" });
     }
-  };
+
+    const hasFilters = Object.keys(req.query).length > 0;
+
+    const files = await MediaSchema.find(queryFilters).sort({ createdAt: -1 }).lean();
+
+    return res.status(200).json({
+      success: true,
+      message: hasFilters ? "Filtered files fetched" : "All files fetched",
+      data: files,
+    });
+
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
   
 
 // delete files uploaded
