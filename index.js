@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cors({
-  origin: ["http://localhost:5174","http://localhost:5173"],
+  origin: ["http://localhost:5174","http://localhost:5173","https://my-cloud-frontent-2025.onrender.com"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
