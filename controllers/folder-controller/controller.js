@@ -132,6 +132,49 @@ export const createFolder = async (req, res) => {
   }
 };
 
+
+export const renameFolderName = async (req,res) => {
+  try {
+    const { folderId } = req.params;  // Extract folder ID from URL parameters
+    const { name } = req.body;  // Extract the new name from the request body
+
+    if (!name || name.trim().length === 0) {
+      return res.status(400).json({ success: false, message: "New folder name is required" });
+    }
+
+    const Folder = await FolderModal(req.dbName);
+
+    // Find the folder by ID
+    const folder = await Folder.findById(folderId);
+    if (!folder || folder.isDeleted) {
+      return res.status(404).json({ success: false, message: "Folder not found" });
+    }
+
+    // Check if the new name already exists for the user
+    const existingFolder = await Folder.findOne({
+      name: name,
+      isDeleted: false,
+      userId: req.user._id,
+    });
+    if (existingFolder) {
+      return res.status(400).json({ success: false, message: "Folder name already exists" });
+    }
+
+    // Update the folder's name
+    folder.name = name;
+    await folder.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Folder renamed successfully",
+      data: folder,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+}
+
 // export const getFoldersWithSubFolders = async (req, res) => {
 //   const dbName = req.user.dbName || process.env.BASE_DB;
 //   const { parentId } = req.query;
@@ -168,23 +211,6 @@ export const createFolder = async (req, res) => {
 // };
 
 
-const populateSubFoldersRecursively = async (folderMap, folder) => {
-  if (!folder.subFolders || folder.subFolders.length === 0) {
-    return folder;
-  }
-
-  
-  folder.subFolders = folder.subFolders
-    .map(subId => folderMap.get(subId.toString()))
-    .filter(sub => sub && sub.isDeleted === false); 
-
-  
-  for (let i = 0; i < folder.subFolders.length; i++) {
-    folder.subFolders[i] = await populateSubFoldersRecursively(folderMap, folder.subFolders[i]);
-  }
-
-  return folder;
-};
 
 
 // export const getFoldersWithSubFolders = async (req, res) => {
@@ -267,47 +293,90 @@ const populateSubFoldersRecursively = async (folderMap, folder) => {
 //     });
 //   }
 // };
+const populateSubFoldersRecursively = async (folderMap, folder) => {
+  if (!folder.subFolders || folder.subFolders.length === 0) {
+    return folder;
+  }
+
+  
+  folder.subFolders = folder.subFolders
+    .map(subId => folderMap.get(subId.toString()))
+    .filter(sub => sub && sub.isDeleted === false); 
+
+  
+  for (let i = 0; i < folder.subFolders.length; i++) {
+    folder.subFolders[i] = await populateSubFoldersRecursively(folderMap, folder.subFolders[i]);
+  }
+
+  return folder;
+};
 
 
 export const getFoldersWithSubFolders = async (req, res) => {
   try {
     const Folder = await FolderModal(req.dbName);
 
-    // Extract all filters (like parentId, userId, published, etc.)
+    // Extract all filters
     const queryFilters = { isDeleted: false, ...req.query };
 
-    // Validate any Id-like fields
+    // Validate ObjectId fields
     for (const key in queryFilters) {
-      if (key.endsWith("Id") && !mongoose.Types.ObjectId.isValid(queryFilters[key])) {
-        return res.status(400).json({ success: false, message: `Invalid ObjectId for ${key}` });
+      if (
+        key.endsWith("Id") &&
+        !mongoose.Types.ObjectId.isValid(queryFilters[key])
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid ObjectId for ${key}`,
+        });
       }
     }
 
     const hasFilters = Object.keys(req.query).length > 0;
+    // console.log(req.query);
+    
 
-    if (hasFilters) {
-      // Just return folders matching filters, no recursion
-      const folders = await Folder.find(queryFilters).sort({ createdAt: -1 }).lean();
-      return res.status(200).json({ success: true, message: "Filtered folders fetched", data: folders });
+    // ✅ Case: If parentId is passed → return parent + its subfolders
+    if (hasFilters && req.query.parentId && req.query.parentId !== "all") {
+      const parentId = req.query.parentId;
+
+      const parentFolder = await Folder.findOne({
+        _id: parentId,
+        isDeleted: false,
+      }).lean();
+
+      const subFolders = await Folder.find({
+        parentId: parentId,
+        isDeleted: false,
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const finalFolders = parentFolder ? [parentFolder, ...subFolders] : subFolders;
+
+      return res.status(200).json({
+        success: true,
+        message: "Parent and its subfolders fetched",
+        data: finalFolders,
+      });
     }
 
-    // Else: Fetch all folders to build nested structure
+    // ✅ Case: No filters → return all folders recursively nested
     const allFolders = await Folder.find({ isDeleted: false }).lean();
-    const folderMap = new Map(allFolders.map(f => [f._id.toString(), f]));
+    const folderMap = new Map(allFolders.map((f) => [f._id.toString(), f]));
 
-    // Recursive nesting
     const populateSubFoldersRecursively = (folder) => {
       if (!folder.subFolders || folder.subFolders.length === 0) return folder;
 
       const validSubs = folder.subFolders
-        .map(id => folderMap.get(id.toString()))
-        .filter(sub => sub && !sub.isDeleted);
+        .map((id) => folderMap.get(id.toString()))
+        .filter((sub) => sub && !sub.isDeleted);
 
       folder.subFolders = validSubs.map(populateSubFoldersRecursively);
       return folder;
     };
 
-    const rootFolders = allFolders.filter(f => !f.parentId);
+    const rootFolders = allFolders.filter((f) => !f.parentId);
     const finalFolders = rootFolders.map(populateSubFoldersRecursively);
 
     return res.status(200).json({
@@ -316,6 +385,8 @@ export const getFoldersWithSubFolders = async (req, res) => {
       data: finalFolders,
     });
   } catch (error) {
+    console.log(error);
+    
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -323,3 +394,60 @@ export const getFoldersWithSubFolders = async (req, res) => {
     });
   }
 };
+
+
+// working code below -========
+// export const getFoldersWithSubFolders = async (req, res) => {
+//   try {
+//     const Folder = await FolderModal(req.dbName);
+
+//     // Extract all filters (like parentId, userId, published, etc.)
+//     const queryFilters = { isDeleted: false, ...req.query };
+
+//     // Validate any Id-like fields
+//     for (const key in queryFilters) {
+//       if (key.endsWith("Id") && !mongoose.Types.ObjectId.isValid(queryFilters[key])) {
+//         return res.status(400).json({ success: false, message: `Invalid ObjectId for ${key}` });
+//       }
+//     }
+
+//     const hasFilters = Object.keys(req.query).length > 0;
+
+//     if (hasFilters) {
+//       // Just return folders matching filters, no recursion
+//       const folders = await Folder.find(queryFilters).sort({ createdAt: -1 }).lean();
+//       return res.status(200).json({ success: true, message: "Filtered folders fetched", data: folders });
+//     }
+
+//     // Else: Fetch all folders to build nested structure
+//     const allFolders = await Folder.find({ isDeleted: false }).lean();
+//     const folderMap = new Map(allFolders.map(f => [f._id.toString(), f]));
+
+//     // Recursive nesting
+//     const populateSubFoldersRecursively = (folder) => {
+//       if (!folder.subFolders || folder.subFolders.length === 0) return folder;
+
+//       const validSubs = folder.subFolders
+//         .map(id => folderMap.get(id.toString()))
+//         .filter(sub => sub && !sub.isDeleted);
+
+//       folder.subFolders = validSubs.map(populateSubFoldersRecursively);
+//       return folder;
+//     };
+
+//     const rootFolders = allFolders.filter(f => !f.parentId);
+//     const finalFolders = rootFolders.map(populateSubFoldersRecursively);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "All folders with nested subfolders",
+//       data: finalFolders,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// };

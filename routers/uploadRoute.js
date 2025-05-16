@@ -6,7 +6,7 @@ import {
 import { authenticateUser } from "../middleware/authMidd.js";
 import { mediaUpload } from "../config/multer.js";
 import { checkStorageLimit } from "../config/storage.js";
-import { createFolder, getFoldersWithSubFolders } from "../controllers/folder-controller/controller.js";
+import { createFolder, getFoldersWithSubFolders, renameFolderName } from "../controllers/folder-controller/controller.js";
 
 const router = Router();
 
@@ -27,6 +27,13 @@ router.post(
   authenticateUser,
   checkStorageLimit,
   createFolder
+);
+
+router.put(
+  "/folder/:folderId",
+  authenticateUser,
+  checkStorageLimit,
+  renameFolderName
 );
 
 
