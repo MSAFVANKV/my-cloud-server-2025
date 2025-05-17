@@ -150,9 +150,9 @@ export const loginUser = async (req, res) => {
     // console.log("Setting cookie...");
     // res.cookie(process.env.TOKEN_NAME, token, {
     //   secure: process.env.NODE_ENV === "production",
-    //   domain: process.env.NODE_ENV === "production"
-    //     ? "my-cloud-server-2025.onrender.com"
-    //     : "localhost",
+      // domain: process.env.NODE_ENV === "production"
+      //   ? "my-cloud-server-2025.onrender.com"
+      //   : "localhost",
     //   maxAge: 30 * 24 * 60 * 60 * 1000,
     //   sameSite: "Strict",
     //   path: "/",
@@ -165,13 +165,14 @@ export const loginUser = async (req, res) => {
     //   path: "/",
     // });
     res.cookie("cld_ath", token, {
-      secure: process.env.NODE_ENV === "production", // Required when SameSite=None
-      // httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-      sameSite: "None", // <- allow cross-site
-      domain: ".onrender.com", // or just avoid setting domain to default to backend host
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,
       path: "/",
     });
+    
     
     
     
