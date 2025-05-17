@@ -97,9 +97,50 @@ export const checkStorageLimit = async (req, res, next) => {
     req.totalUsedStorage = totalUsedStorage;
     req.newUsedStorage = newUsedStorage;
 
+    // console.log(req.totalUsedStorage, "totalUsedStorage");
+    // console.log(req.newUsedStorage, "newUsedStorage");
+    
+
     next();
   } catch (error) {
     console.error("Storage limit check error:", error);
     res.status(500).json({ message: "Server error while checking storage limit" });
   }
 };
+// export const checkStorageLimit = async (req, res, next) => {
+//   try {
+//     const userId = req.user._id
+//     const mediaCollectionName = `Media_${req.dbName}`;
+//     const folderCollectionName = `Folder_${req.dbName}`;
+
+//     const mongooseConn = await getDb();  
+//     const UserDb = await UserModal();         // Mongoose connection
+//     const nativeDb = mongooseConn.db;             // Native MongoDB connection
+
+//     const mediaStats = await nativeDb.command({ collStats: mediaCollectionName });
+//     const folderStats = await nativeDb.command({ collStats: folderCollectionName });
+
+//         const user = await UserDb.findById(userId);
+
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     console.log(folderStats,'folderStats');
+
+//     const mediaStorage = mediaStats.storageSize || 0;
+//     const folderStorage = folderStats.storageSize || 0;
+//     const totalStorageUsed = mediaStorage + folderStorage;
+
+//     const maxStorageLimit = 10 * 1024 * 1024 * 1024; // 10 GB
+
+//     if (totalStorageUsed >= maxStorageLimit) {
+//       return res.status(403).json({ error: "Storage limit exceeded" });
+//     }
+
+//     next();
+//   } catch (err) {
+//     console.error("Storage limit check failed:", err);
+//     res.status(500).json({ error: "Failed to check storage usage" });
+//   }
+// };

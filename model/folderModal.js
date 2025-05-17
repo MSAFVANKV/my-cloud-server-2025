@@ -60,7 +60,15 @@ FolderSchema.pre("validate", function (next) {
   next();
 });
 
-export const FolderModal = async (dbName) => {
-  const masterDb = await getDb(dbName);
-  return masterDb.model.Folder || masterDb.model("Folder", FolderSchema);
+// export const FolderModal = async (dbName) => {
+//   const masterDb = await getDb(dbName);
+//   return masterDb.model.Folder || masterDb.model("Folder", FolderSchema);
+// };
+export const FolderModal = async (userId) => {
+  const masterDb = await getDb(); // Shared DB now
+  const modelName = `Folder_${userId}`;
+
+  if (masterDb.models[modelName]) return masterDb.models[modelName];
+
+  return masterDb.model(modelName, FolderSchema, modelName); // 3rd param = collection name
 };

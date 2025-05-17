@@ -82,6 +82,7 @@ export const createFolder = async (req, res) => {
 
     const Folder = await FolderModal(req.dbName);
 
+
     const existingFolder = await Folder.findOne({
       name,
       isDeleted: false,
@@ -143,6 +144,7 @@ export const renameFolderName = async (req,res) => {
     }
 
     const Folder = await FolderModal(req.dbName);
+
 
     // Find the folder by ID
     const folder = await Folder.findById(folderId);
@@ -314,7 +316,7 @@ const populateSubFoldersRecursively = async (folderMap, folder) => {
 
 export const getFoldersWithSubFolders = async (req, res) => {
   try {
-    const Folder = await FolderModal(req.dbName);
+    const Folder = await FolderModal(req.user._id);
 
     // Extract all filters
     const queryFilters = { isDeleted: false, ...req.query };

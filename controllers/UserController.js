@@ -121,6 +121,8 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(req.body);
+    
 
     const UserDb = await UserModal();
 
@@ -149,12 +151,12 @@ export const loginUser = async (req, res) => {
     res.cookie(process.env.TOKEN_NAME, token, {
       secure: process.env.NODE_ENV === "production",
       domain:
-        process.env.NODE_ENV === "production" ? ".myCloud.com" : "localhost",
+        process.env.NODE_ENV === "production" ? ".my-cloud-frontent-2025.onrender.com/" : "localhost",
       maxAge: 30 * 24 * 60 * 60 * 1000,
       sameSite: "Strict",
       path: "/",
     });
-    console.log("Cookie set:", token);
+    // console.log("Cookie set:", token);
 
     res.setHeader("Authorization", `Bearer ${token}`);
 

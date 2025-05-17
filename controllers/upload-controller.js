@@ -36,9 +36,18 @@ export const uploadFiles = async (req, res, next) => {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
+
     const { folderId } = req.body;
     const MediaSchema = await MediaModal(req.dbName);
-    const FolderSchema = await FolderModal(req.dbName); // <-- Get Folder schema
+    // const FolderSchema = await FolderModal(req.dbName);
+    const FolderSchema = await FolderModal(req.dbName);
+     // <-- Get Folder schema
+    //  console.log(req.user.totalStorage, "totalStorage");
+     
+
+     if(req.newUsedStorage > req.user.totalStorage) {
+      return res.status(400).json({ message: "Please Upgrade your plan" });
+     }
 
     if (folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
       return res.status(400).json({

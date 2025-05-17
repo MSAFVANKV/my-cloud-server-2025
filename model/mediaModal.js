@@ -42,7 +42,15 @@ const mediaSchema = new mongoose.Schema({
   uploadedAt: { type: Date, default: Date.now },
 });
 
-export const MediaModal = async (dbName) => {
-  const masterDb = await getDb(dbName);
-  return masterDb.model.Folder || masterDb.model("Media", mediaSchema);
+// export const MediaModal = async (dbName) => {
+//   const masterDb = await getDb(dbName);
+//   return masterDb.model.Folder || masterDb.model("Media", mediaSchema);
+// };
+export const MediaModal = async (userId) => {
+  const masterDb = await getDb(); // Shared DB now
+  const modelName = `Media_${userId}`;
+
+  if (masterDb.models[modelName]) return masterDb.models[modelName];
+
+  return masterDb.model(modelName, mediaSchema, modelName); // 3rd param = collection name
 };

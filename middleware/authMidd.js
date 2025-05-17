@@ -24,7 +24,11 @@ export const authenticateUser = async (req, res, next) => {
     const UserDb = await UserModal();
 
     req.user = await UserDb.findById(decoded.userId).select("-password");
+    // console.log(req.user);
+    
     req.dbName = decoded.dbName;
+    // console.log( req.dbName);
+
 
     if (!req.user) {
       return res.status(401).json({

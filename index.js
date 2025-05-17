@@ -42,6 +42,9 @@ const checkInternet = (req, res, next) => {
 
 app.use(checkInternet);
 
+// app.use('/api/check', ()=>{
+
+// });
 
 // app.use('/api/messages', messageRoute);
 app.use('/api/user', userRoute);
