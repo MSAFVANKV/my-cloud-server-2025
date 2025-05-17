@@ -165,8 +165,8 @@ export const loginUser = async (req, res) => {
     //   path: "/",
     // });
     res.cookie("cld_ath", token, {
-      secure: true, // Required when SameSite=None
-      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Required when SameSite=None
+      // httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000,
       sameSite: "None", // <- allow cross-site
       domain: ".onrender.com", // or just avoid setting domain to default to backend host
