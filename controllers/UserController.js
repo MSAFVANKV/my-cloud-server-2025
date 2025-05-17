@@ -121,8 +121,6 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log(req.body);
-    
 
     const UserDb = await UserModal();
 
@@ -147,39 +145,18 @@ export const loginUser = async (req, res) => {
       dbName: user.databaseName, // Include database name
     });
 
-    // console.log("Setting cookie...");
-    // res.cookie(process.env.TOKEN_NAME, token, {
-    //   secure: process.env.NODE_ENV === "production",
-      // domain: process.env.NODE_ENV === "production"
-      //   ? "my-cloud-server-2025.onrender.com"
-      //   : "localhost",
-    //   maxAge: 30 * 24 * 60 * 60 * 1000,
-    //   sameSite: "Strict",
-    //   path: "/",
-    // });
-    // res.cookie(process.env.TOKEN_NAME, token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === "production", // Ensure it's HTTPS in production
-    //   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    //   sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-    //   path: "/",
-    // });
-    res.cookie("cld_ath", token, {
+    console.log(" process.env.NODE_ENV ", process.env.NODE_ENV );
+    res.cookie(process.env.TOKEN_NAME, token, {
       secure: process.env.NODE_ENV === "production",
-      // httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,
+      domain:
+        process.env.NODE_ENV === "production" ? ".onrender.com" : "localhost",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      sameSite: "Strict",
       path: "/",
     });
-    
-    
-    
-    
-    
-    // console.log("Cookie set:", token);
+    console.log("Cookie set:", token);
 
-    // res.setHeader("Authorization", `Bearer ${token}`);
+    res.setHeader("Authorization", `Bearer ${token}`);
 
     return res.status(200).json({
       message: "Login successful",
