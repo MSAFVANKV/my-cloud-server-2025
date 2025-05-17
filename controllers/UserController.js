@@ -166,7 +166,7 @@ export const loginUser = async (req, res) => {
     // });
     res.cookie("cld_ath", token, {
       secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
+      // httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,
