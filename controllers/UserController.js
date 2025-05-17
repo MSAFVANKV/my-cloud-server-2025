@@ -148,15 +148,23 @@ export const loginUser = async (req, res) => {
     });
 
     // console.log("Setting cookie...");
+    // res.cookie(process.env.TOKEN_NAME, token, {
+    //   secure: process.env.NODE_ENV === "production",
+    //   domain: process.env.NODE_ENV === "production"
+    //     ? "my-cloud-server-2025.onrender.com"
+    //     : "localhost",
+    //   maxAge: 30 * 24 * 60 * 60 * 1000,
+    //   sameSite: "Strict",
+    //   path: "/",
+    // });
     res.cookie(process.env.TOKEN_NAME, token, {
-      secure: process.env.NODE_ENV === "production",
-      domain: process.env.NODE_ENV === "production"
-        ? "my-cloud-server-2025.onrender.com"
-        : "localhost",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-      sameSite: "Strict",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Ensure it's HTTPS in production
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       path: "/",
     });
+    
     
     // console.log("Cookie set:", token);
 
