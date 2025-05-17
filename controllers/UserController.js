@@ -166,10 +166,10 @@ export const loginUser = async (req, res) => {
     // });
     res.cookie("cld_ath", token, {
       secure: process.env.NODE_ENV === "production",
-      domain:
-        process.env.NODE_ENV === "production" ? ".onrender.com" : "localhost",
-      // domain:".ayaboo.com",
-      httpOnly: true,
+      // domain:
+      //   process.env.NODE_ENV === "production" ? ".onrender.com" : "localhost",
+     
+      // httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000,
       sameSite: "Strict",
       path: "/",
@@ -178,7 +178,7 @@ export const loginUser = async (req, res) => {
     
     // console.log("Cookie set:", token);
 
-    res.setHeader("Authorization", `Bearer ${token}`);
+    // res.setHeader("Authorization", `Bearer ${token}`);
 
     return res.status(200).json({
       message: "Login successful",
