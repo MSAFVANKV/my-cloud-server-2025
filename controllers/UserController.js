@@ -165,15 +165,13 @@ export const loginUser = async (req, res) => {
     //   path: "/",
     // });
     res.cookie("cld_ath", token, {
-      secure: process.env.NODE_ENV === "production",
-      // domain:
-      //   process.env.NODE_ENV === "production" ? ".onrender.com" : "localhost",
-     
-      // httpOnly: true,
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
       maxAge: 30 * 24 * 60 * 60 * 1000,
-      sameSite: "Strict",
       path: "/",
     });
+    
     
     
     // console.log("Cookie set:", token);
