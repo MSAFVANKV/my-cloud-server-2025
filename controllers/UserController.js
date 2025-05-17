@@ -169,7 +169,7 @@ export const loginUser = async (req, res) => {
       domain:
         process.env.NODE_ENV === "production" ? ".onrender.com" : "localhost",
       // domain:".ayaboo.com",
-
+      httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000,
       sameSite: "Strict",
       path: "/",
