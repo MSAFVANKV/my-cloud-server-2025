@@ -151,7 +151,7 @@ export const loginUser = async (req, res) => {
     res.cookie(process.env.TOKEN_NAME, token, {
       secure: process.env.NODE_ENV === "production",
       domain: process.env.NODE_ENV === "production"
-        ? ".my-cloud-frontent-2025.onrender.com"
+        ? ".onrender.com"
         : "localhost",
       maxAge: 30 * 24 * 60 * 60 * 1000,
       sameSite: "Strict",
