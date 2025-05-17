@@ -150,15 +150,15 @@ export const loginUser = async (req, res) => {
     // console.log("Setting cookie...");
     res.cookie(process.env.TOKEN_NAME, token, {
       secure: process.env.NODE_ENV === "production",
-      domain: process.env.NODE_ENV === "production"
-        ? ".onrender.com"
-        : "localhost",
+      // domain: process.env.NODE_ENV === "production"
+      //   ? ".onrender.com"
+      //   : "localhost",
       maxAge: 30 * 24 * 60 * 60 * 1000,
       sameSite: "Strict",
       path: "/",
     });
     
-    // console.log("Cookie set:", token);
+    console.log("Cookie set:", token);
 
     res.setHeader("Authorization", `Bearer ${token}`);
 
