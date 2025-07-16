@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getCurrentUser, loginUser, registerUser } from '../controllers/UserController.js';
 import { authenticateUser } from '../middleware/authMidd.js';
+import { withdrawMyWallet } from '../controllers/wallet-controller/index.js';
 
 
 
@@ -15,6 +16,7 @@ router.get("/get-current-user",authenticateUser,getCurrentUser);
 
 
 
+router.post("/withdraw",withdrawMyWallet);
 
 
 
