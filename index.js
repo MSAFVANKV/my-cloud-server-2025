@@ -1,40 +1,51 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
-import dns from 'dns';
+import dns from "dns";
 
-import userRoute from './routers/userRoute.js';
-import uploadRoute from './routers/uploadRoute.js';
-
+import userRoute from "./routers/userRoute.js";
+import uploadRoute from "./routers/uploadRoute.js";
 
 // import { Server } from 'socket.io';
 
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 8000
+const PORT = process.env.PORT || 8000;
 
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(cors({
-  origin: ["http://localhost:5174","http://localhost:5173","https://my-cloud-frontent-2025.onrender.com"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5174",
+      "http://localhost:5173",
+      "https://my-cloud-frontent-2025.onrender.com",
+      "my-cloud-frontent-2025.onrender.com",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use("/uploads/images", express.static("uploads/images/"))
-app.use("/uploads/recordings", express.static("uploads/recordings/"))
+app.use("/uploads/images", express.static("uploads/images/"));
+app.use("/uploads/recordings", express.static("uploads/recordings/"));
 
 const checkInternet = (req, res, next) => {
-  dns.lookup('google.com', (err) => {
+  dns.lookup("google.com", (err) => {
     if (err && err.code === "ENOTFOUND") {
-      return res.status(503).json({ message: "No internet connection. Please check your network and try again." });
+      return res
+        .status(503)
+        .json({
+          message:
+            "No internet connection. Please check your network and try again.",
+        });
     }
     next();
   });
@@ -47,14 +58,12 @@ app.use(checkInternet);
 // });
 
 // app.use('/api/messages', messageRoute);
-app.use('/api/user', userRoute);
-app.use('/api/upload', uploadRoute);
+app.use("/api/user", userRoute);
+app.use("/api/upload", uploadRoute);
 
-
-
-const server = app.listen(PORT,()=>{
-    console.log(`Server running on port http://localhost:${PORT}`)
-})
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port http://localhost:${PORT}`);
+});
 
 // connectDB();
 
@@ -63,7 +72,7 @@ const server = app.listen(PORT,()=>{
 //       origin: "http://localhost:5173",
 //       methods: ["GET", "POST", "PUT", "DELETE"]
 //     }
- 
+
 // })
 
 // global.onlineUser = new Map();
@@ -78,7 +87,7 @@ const server = app.listen(PORT,()=>{
 
 //       socket.on('send-message', (data) => {
 //         console.log(data,'data');
-        
+
 //         const sendUserSocket = onlineUser.get(data.to);
 //         if(sendUserSocket) {
 //             socket.to(sendUserSocket).emit('msg-receive', {
@@ -95,5 +104,5 @@ const server = app.listen(PORT,()=>{
 //     socket.on('join', ({ userId }) => {
 //       onlineUser.set(userId, socket.id);
 //     });
-  
+
 // })
