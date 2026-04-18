@@ -7,6 +7,8 @@ import dns from "dns";
 
 import userRoute from "./routers/userRoute.js";
 import uploadRoute from "./routers/uploadRoute.js";
+import trashRoute from "./routers/trashRoute.js";
+import { initializeCronJobs } from "./cron/cleanupTrash.js";
 
 // import { Server } from 'socket.io';
 
@@ -60,6 +62,10 @@ app.use(checkInternet);
 // app.use('/api/messages', messageRoute);
 app.use("/api/user", userRoute);
 app.use("/api/upload", uploadRoute);
+app.use("/api/trash", trashRoute);
+
+// Start scheduled tasks globally
+initializeCronJobs();
 
 const server = app.listen(PORT, () => {
   console.log(`Server running on port http://localhost:${PORT}`);

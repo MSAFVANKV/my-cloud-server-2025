@@ -15,6 +15,10 @@ const FolderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
     published:{
       type: Boolean,
       default: true,

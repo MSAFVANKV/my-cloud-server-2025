@@ -1,6 +1,8 @@
 import multer from "multer";
-import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinaryPkg from "cloudinary";
+const cloudinary = cloudinaryPkg.v2;
+import CloudinaryStoragePkg from 'multer-storage-cloudinary';
+
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -11,14 +13,15 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_SECRET,
 });
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+const storage = CloudinaryStoragePkg({
+  cloudinary: cloudinaryPkg,
   params: {
     folder: "media_uploads", 
     allowed_formats: ["jpg", "jpeg", "png", "webp", "pdf", "mp4", "avi", "mov", "xlsx", "xls"],
     resource_type: "auto",
   },
 });
+
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [

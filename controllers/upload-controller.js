@@ -6,7 +6,7 @@ import { UserModal } from "../model/UserSchema.js";
 import { FolderModal } from "../model/folderModal.js";
 
 export const getImageDimensions = async (filePath, mimetype) => {
-  if (!mimetype.startsWith("image/")) return null;
+  if (!mimetype || !mimetype.startsWith("image/")) return null;
 
   try {
     let imageBuffer;
@@ -57,16 +57,27 @@ export const uploadFiles = async (req, res, next) => {
 
     const savedFiles = await Promise.all(
       req.files.map(async (file) => {
-        const dimensions = await getImageDimensions(file.path, file.mimetype);
+        // Use Cloudinary's native width/height if available, otherwise fallback
+        const width = file.width || null;
+        const height = file.height || null;
+        
+        const fileUrl = file.secure_url || file.url || file.path;
+        
+        let dimensions = null;
+        if (!width || !height) {
+            dimensions = await getImageDimensions(fileUrl, file.mimetype || file.format);
+        }
+        console.log(fileUrl, 'fileUrl');
+        
 
         return {
-          name: file.originalname,
-          size: file.size,
-          format: file.mimetype,
+          name: file.originalname || file.name || "Untitled",
+          size: file.size || file.bytes || 0,
+          format: file.mimetype || file.format || "unknown",
           folderId,
-          src: file.path,
-          width: dimensions?.width || null,
-          height: dimensions?.height || null,
+          src: fileUrl,
+          width: width || dimensions?.width || null,
+          height: height || dimensions?.height || null,
           uploadedBy: req.user._id,
         };
       })

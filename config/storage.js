@@ -78,12 +78,12 @@ export const checkStorageLimit = async (req, res, next) => {
     const MediaSchema = await MediaModal(req.dbName);
     const allFiles = await MediaSchema.find({ uploadedBy: req.user._id });
 
-    const totalUsedStorage = allFiles.reduce((acc, file) => acc + file.size, 0);
+    const totalUsedStorage = allFiles.reduce((acc, file) => acc + (Number(file.size) || 0), 0);
 
     // If request contains new files, calculate their total size
     let newFileSize = 0;
     if (req.files && req.files.length > 0) {
-      newFileSize = req.files.reduce((acc, file) => acc + file.size, 0);
+      newFileSize = req.files.reduce((acc, file) => acc + (Number(file.size) || Number(file.bytes) || 0), 0);
     }
 
     const newUsedStorage = totalUsedStorage + newFileSize;
